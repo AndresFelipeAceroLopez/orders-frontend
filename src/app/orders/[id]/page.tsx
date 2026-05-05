@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DataGrid, {
@@ -16,8 +16,11 @@ import { getOrder, patchOrder, deleteOrder, listItems, addItem, patchItem, delet
 import { Order, OrderItem, Product, STATUS_OPTIONS, STATUS_LABELS, OrderStatus } from '../../../types';
 
 
-export default function OrderDetailPage({ params }: { params: { id: string } }) {
+export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
+  const id = resolvedParams.id;
   const router = useRouter();
+
   const [order,    setOrder]    = useState<Order | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [newStatus, setNewStatus] = useState<OrderStatus | null>(null);
@@ -25,21 +28,21 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
   const gridRef = useRef<any>(null);
 
   useEffect(() => {
-    getOrder(params.id).then(setOrder).catch(() => notify('Error al cargar pedido', 'error', 3000));
+    getOrder(id).then(setOrder).catch(() => notify('Error al cargar pedido', 'error', 3000));
     listProducts({ limit: 1000 }).then((d: any) => setProducts(d.items ?? d)).catch(() => {});
-  }, [params.id]);
+  }, [id]);
 
   const itemsStore = new CustomStore({
     key: 'id',
-    load: () => listItems(params.id),
-    update: (key: number, values: object) => patchItem(params.id, key, values),
-    remove: (key: number) => deleteItem(params.id, key),
+    load: () => listItems(id),
+    update: (key: number, values: object) => patchItem(id, key, values),
+    remove: (key: number) => deleteItem(id, key),
   });
 
   const handleChangeStatus = async () => {
     if (!newStatus || !order) return;
     try {
-      const updated = await patchOrder(params.id, { status: newStatus });
+      const updated = await patchOrder(id, { status: newStatus });
       setOrder(updated);
       notify('Estado actualizado', 'success', 2000);
     } catch (e: any) {
@@ -51,7 +54,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
     const ok = await confirm('¿Eliminar este pedido?', 'Confirmar');
     if (!ok) return;
     try {
-      await deleteOrder(params.id);
+      await deleteOrder(id);
       router.push('/orders');
     } catch (e: any) {
       notify(e.message, 'error', 3000);
@@ -64,10 +67,10 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
     try {
       const body: any = { productId: addForm.productId, quantity: addForm.quantity };
       if (addForm.unitPrice) body.unitPrice = addForm.unitPrice;
-      await addItem(params.id, body);
+      await addItem(id, body);
       gridRef.current?.instance?.refresh();
       setAddForm({ productId: null, quantity: 1, unitPrice: null });
-      getOrder(params.id).then(setOrder);
+      getOrder(id).then(setOrder);
       notify('Ítem agregado', 'success', 2000);
     } catch (e: any) {
       notify(e.message, 'error', 3000);

@@ -7,6 +7,7 @@ export interface Customer {
   city?: string;
   country?: string;
   phone?: string;
+  orders?: Order[];
 }
 
 export interface Supplier {
