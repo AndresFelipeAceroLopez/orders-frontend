@@ -1,5 +1,3 @@
-const envUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
-const BASE_URL = envUrl ? `${envUrl.replace(/\/$/, '')}/api/v1` : '/api';
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL
   ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1`
   : '';
@@ -61,7 +59,7 @@ export async function listItems(orderId: number | string) {
 }
 
 export async function addItem(orderId: number | string, data: object) {
-  return secureFetch(`/api/orders/${orderId}/items`, {
+  return secureFetch(`/orders/${orderId}/items`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
