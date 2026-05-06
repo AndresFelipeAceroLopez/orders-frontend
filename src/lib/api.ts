@@ -1,50 +1,42 @@
 const envUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
 const BASE_URL = envUrl ? `${envUrl.replace(/\/$/, '')}/api/v1` : '/api';
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL
+  ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1`
+  : '';
 
-// Helper for robust fetch
 async function secureFetch(path: string, init?: RequestInit) {
-  // Remove trailing slash from BASE_URL and leading slash from path
-  const normalizedBase = BASE_URL.replace(/\/$/, '');
-  const normalizedPath = path.startsWith('/api/') ? path.replace('/api', '') : path;
-  const url = normalizedPath.startsWith('http') ? normalizedPath : `${normalizedBase}${normalizedPath}`;
+  const url = `${API_URL}${path}`;
 
   const res = await fetch(url, init);
+
   if (!res.ok) {
     let detail = '';
     try {
       const json = await res.json();
       detail = json.message || json.detail || JSON.stringify(json);
-      if (json.errors) {
-        console.group('Detailed Validation Error');
-        console.error('URL:', url);
-        console.error('Errors:', JSON.stringify(json.errors, null, 2));
-        console.groupEnd();
-      }
     } catch {
-      try {
-        detail = await res.text();
-      } catch {
-        detail = res.statusText;
-      }
+      detail = await res.text();
     }
+
     console.error(`API Error on ${url} (${res.status}):`, detail);
     throw new Error(detail || `Error del servidor (${res.status})`);
   }
+
   return res.json();
 }
 
 // ── Orders ──────────────────────────────────────────────────────────────────
 export async function listOrders(params: Record<string, string | number> = {}) {
   const qs = new URLSearchParams(params as Record<string, string>).toString();
-  return secureFetch(`/api/orders${qs ? '?' + qs : ''}`);
+  return secureFetch(`/orders${qs ? '?' + qs : ''}`);
 }
 
 export async function getOrder(id: number | string) {
-  return secureFetch(`/api/orders/${id}`);
+  return secureFetch(`/orders/${id}`);
 }
 
 export async function createOrder(data: object) {
-  return secureFetch('/api/orders', {
+  return secureFetch('/orders', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -52,7 +44,7 @@ export async function createOrder(data: object) {
 }
 
 export async function patchOrder(id: number | string, data: object) {
-  return secureFetch(`/api/orders/${id}`, {
+  return secureFetch(`/orders/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -60,12 +52,12 @@ export async function patchOrder(id: number | string, data: object) {
 }
 
 export async function deleteOrder(id: number | string) {
-  await secureFetch(`/api/orders/${id}`, { method: 'DELETE' });
+  await secureFetch(`/orders/${id}`, { method: 'DELETE' });
 }
 
 // ── Order Items ─────────────────────────────────────────────────────────────
 export async function listItems(orderId: number | string) {
-  return secureFetch(`/api/orders/${orderId}/items`);
+  return secureFetch(`/orders/${orderId}/items`);
 }
 
 export async function addItem(orderId: number | string, data: object) {
@@ -77,7 +69,7 @@ export async function addItem(orderId: number | string, data: object) {
 }
 
 export async function patchItem(orderId: number | string, itemId: number | string, data: object) {
-  return secureFetch(`/api/orders/${orderId}/items/${itemId}`, {
+  return secureFetch(`/orders/${orderId}/items/${itemId}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -85,21 +77,21 @@ export async function patchItem(orderId: number | string, itemId: number | strin
 }
 
 export async function deleteItem(orderId: number | string, itemId: number | string) {
-  await secureFetch(`/api/orders/${orderId}/items/${itemId}`, { method: 'DELETE' });
+  await secureFetch(`/orders/${orderId}/items/${itemId}`, { method: 'DELETE' });
 }
 
 // ── Customers ───────────────────────────────────────────────────────────────
 export async function listCustomers(params: Record<string, string | number> = {}) {
   const qs = new URLSearchParams(params as Record<string, string>).toString();
-  return secureFetch(`/api/customers${qs ? '?' + qs : ''}`);
+  return secureFetch(`/customers${qs ? '?' + qs : ''}`);
 }
 
 export async function getCustomer(id: number | string) {
-  return secureFetch(`/api/customers/${id}`);
+  return secureFetch(`/customers/${id}`);
 }
 
 export async function createCustomer(data: object) {
-  return secureFetch('/api/customers', {
+  return secureFetch('/customers', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -107,7 +99,7 @@ export async function createCustomer(data: object) {
 }
 
 export async function patchCustomer(id: number | string, data: object) {
-  return secureFetch(`/api/customers/${id}`, {
+  return secureFetch(`/customers/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -117,15 +109,15 @@ export async function patchCustomer(id: number | string, data: object) {
 // ── Products ─────────────────────────────────────────────────────────────────
 export async function listProducts(params: Record<string, string | number> = {}) {
   const qs = new URLSearchParams(params as Record<string, string>).toString();
-  return secureFetch(`/api/products${qs ? '?' + qs : ''}`);
+  return secureFetch(`/products${qs ? '?' + qs : ''}`);
 }
 
 export async function getProduct(id: number | string) {
-  return secureFetch(`/api/products/${id}`);
+  return secureFetch(`/products/${id}`);
 }
 
 export async function createProduct(data: object) {
-  return secureFetch('/api/products', {
+  return secureFetch('/products', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -133,7 +125,7 @@ export async function createProduct(data: object) {
 }
 
 export async function patchProduct(id: number | string, data: object) {
-  return secureFetch(`/api/products/${id}`, {
+  return secureFetch(`/products/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -143,15 +135,15 @@ export async function patchProduct(id: number | string, data: object) {
 // ── Suppliers ────────────────────────────────────────────────────────────────
 export async function listSuppliers(params: Record<string, string | number> = {}) {
   const qs = new URLSearchParams(params as Record<string, string>).toString();
-  return secureFetch(`/api/suppliers${qs ? '?' + qs : ''}`);
+  return secureFetch(`/suppliers${qs ? '?' + qs : ''}`);
 }
 
 export async function getSupplier(id: number | string) {
-  return secureFetch(`/api/suppliers/${id}`);
+  return secureFetch(`/suppliers/${id}`);
 }
 
 export async function createSupplier(data: object) {
-  return secureFetch('/api/suppliers', {
+  return secureFetch('/suppliers', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -159,7 +151,7 @@ export async function createSupplier(data: object) {
 }
 
 export async function patchSupplier(id: number | string, data: object) {
-  return secureFetch(`/api/suppliers/${id}`, {
+  return secureFetch(`/suppliers/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
