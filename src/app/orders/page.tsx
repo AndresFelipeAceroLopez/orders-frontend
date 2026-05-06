@@ -20,9 +20,31 @@ const store = new CustomStore({
     const page  = Math.floor((opts.skip ?? 0) / (opts.take ?? 20)) + 1;
     const limit = opts.take ?? 20;
     const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    
     return fetch(`/api/orders?${params}`)
-      .then(r => r.json())
-      .then(d => ({ data: d.items, totalCount: d.total }));
+      .then(async (r) => {
+        if (!r.ok) {
+          const text = await r.text();
+          console.error(`API Error (${r.status}):`, text);
+          throw new Error(`Server returned ${r.status}`);
+        }
+        return r.json();
+      })
+      .then((d) => {
+        if (d.items === undefined || d.total === undefined) {
+          console.error('Unexpected API response structure:', d);
+          // Fallback to avoid E4021 if total is missing, but log it
+          return {
+            data: d.items ?? [],
+            totalCount: d.total ?? (Array.isArray(d) ? d.length : 0),
+          };
+        }
+        return { data: d.items, totalCount: d.total };
+      })
+      .catch((err) => {
+        console.error('CustomStore Load Error:', err);
+        throw err;
+      });
   },
 });
 

@@ -18,17 +18,17 @@ interface LocalItem { _id: number; productId: number | null; quantity: number; u
 
 export default function NewOrderPage() {
   const router = useRouter();
+  const [gridInstance, setGridInstance] = useState<any>(null);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [products,  setProducts]  = useState<Product[]>([]);
   const [customerId, setCustomerId] = useState<number | null>(null);
   const [orderNumber, setOrderNumber] = useState('');
   const [orderDate,   setOrderDate]   = useState<Date | null>(null);
   const [items, setItems] = useState<LocalItem[]>([]);
-  const gridRef = useRef<any>(null);
 
   useEffect(() => {
-    listCustomers({ limit: 1000 }).then((d: any) => setCustomers(d.items ?? d)).catch(() => {});
-    listProducts({ limit: 1000  }).then((d: any) => setProducts(d.items ?? d)).catch(() => {});
+    listCustomers({ limit: 100 }).then((d: any) => setCustomers(d.items ?? d)).catch(() => {});
+    listProducts({ limit: 100  }).then((d: any) => setProducts(d.items ?? d)).catch(() => {});
   }, []);
 
   const itemsStore = new DataSource({
@@ -37,7 +37,7 @@ export default function NewOrderPage() {
 
   const handleSave = async () => {
     if (!customerId) { notify('Selecciona un cliente', 'warning', 2000); return; }
-    const rows: LocalItem[] = gridRef.current?.instance?.getDataSource().items() ?? [];
+    const rows: LocalItem[] = gridInstance?.getDataSource().items() ?? [];
     if (!rows.length) { notify('Agregá al menos un ítem', 'warning', 2000); return; }
 
     const payload: any = {
@@ -95,12 +95,12 @@ export default function NewOrderPage() {
       <div className="card">
         <div className="card-title">Ítems <span style={{ color: '#c62828' }}>*</span></div>
         <DataGrid
-          ref={gridRef}
           dataSource={itemsStore}
           showBorders
+          onInitialized={(e) => setGridInstance(e.component)}
           onRowInserted={(e) => { e.data._id = Date.now(); }}
         >
-          <Editing mode="row" allowUpdating allowDeleting allowAdding={false} />
+          <Editing mode="row" allowUpdating allowDeleting allowAdding={true} />
           <Column dataField="productId" caption="Producto">
             <Lookup dataSource={products} valueExpr="id" displayExpr="productName" />
           </Column>
@@ -112,7 +112,7 @@ export default function NewOrderPage() {
             text="Agregar fila"
             icon="plus"
             type="normal"
-            onClick={() => gridRef.current?.instance?.addRow()}
+            onClick={() => gridInstance?.addRow()}
           />
         </div>
       </div>

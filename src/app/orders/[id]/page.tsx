@@ -25,11 +25,11 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const [products, setProducts] = useState<Product[]>([]);
   const [newStatus, setNewStatus] = useState<OrderStatus | null>(null);
   const [addForm,  setAddForm]  = useState({ productId: null as number | null, quantity: 1, unitPrice: null as number | null });
-  const gridRef = useRef<any>(null);
+  const [gridInstance, setGridInstance] = useState<any>(null);
 
   useEffect(() => {
     getOrder(id).then(setOrder).catch(() => notify('Error al cargar pedido', 'error', 3000));
-    listProducts({ limit: 1000 }).then((d: any) => setProducts(d.items ?? d)).catch(() => {});
+    listProducts({ limit: 100 }).then((d: any) => setProducts(d.items ?? d)).catch(() => {});
   }, [id]);
 
   const itemsStore = new CustomStore({
@@ -68,7 +68,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
       const body: any = { productId: addForm.productId, quantity: addForm.quantity };
       if (addForm.unitPrice) body.unitPrice = addForm.unitPrice;
       await addItem(id, body);
-      gridRef.current?.instance?.refresh();
+      gridInstance?.refresh();
       setAddForm({ productId: null, quantity: 1, unitPrice: null });
       getOrder(id).then(setOrder);
       notify('Ítem agregado', 'success', 2000);
@@ -143,7 +143,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
           <div className="card" style={{ padding: 0 }}>
             <div className="card-title" style={{ padding: '16px 20px 12px', margin: 0 }}>Ítems del pedido</div>
             <DataGrid
-              ref={gridRef}
+              onInitialized={(e) => setGridInstance(e.component)}
               dataSource={itemsStore}
               showBorders={false}
               showRowLines

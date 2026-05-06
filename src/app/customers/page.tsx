@@ -13,8 +13,22 @@ const store = new CustomStore({
     const params = new URLSearchParams({ page: String(page), limit: String(limit) });
     if (opts.searchValue) params.append('search', opts.searchValue);
     return fetch(`/api/customers?${params}`)
-      .then(r => r.json())
-      .then(d => ({ data: d.items, totalCount: d.total }));
+      .then(async (r) => {
+        if (!r.ok) {
+          const text = await r.text();
+          console.error(`API Error (${r.status}):`, text);
+          throw new Error(`Server returned ${r.status}`);
+        }
+        return r.json();
+      })
+      .then((d) => ({
+        data: d.items ?? [],
+        totalCount: d.total ?? (Array.isArray(d) ? d.length : 0),
+      }))
+      .catch((err) => {
+        console.error('CustomStore Load Error:', err);
+        throw err;
+      });
   },
 });
 

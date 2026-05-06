@@ -1,37 +1,54 @@
+// Helper for robust fetch
+async function secureFetch(url: string, init?: RequestInit) {
+  const res = await fetch(url, init);
+  if (!res.ok) {
+    let detail = '';
+    try {
+      const json = await res.json();
+      detail = json.message || json.detail || JSON.stringify(json);
+      if (json.errors) {
+        console.group('Detailed Validation Error');
+        console.error('URL:', url);
+        console.error('Errors:', JSON.stringify(json.errors, null, 2));
+        console.groupEnd();
+      }
+    } catch {
+      try {
+        detail = await res.text();
+      } catch {
+        detail = res.statusText;
+      }
+    }
+    console.error(`API Error on ${url} (${res.status}):`, detail);
+    throw new Error(detail || `Error del servidor (${res.status})`);
+  }
+  return res.json();
+}
+
 // ── Orders ──────────────────────────────────────────────────────────────────
 export async function listOrders(params: Record<string, string | number> = {}) {
   const qs = new URLSearchParams(params as Record<string, string>).toString();
-  const res = await fetch(`/api/orders${qs ? '?' + qs : ''}`);
-  if (!res.ok) throw new Error('Error al cargar pedidos');
-  return res.json();
+  return secureFetch(`/api/orders${qs ? '?' + qs : ''}`);
 }
 
 export async function getOrder(id: number | string) {
-  const res = await fetch(`/api/orders/${id}`);
-  if (!res.ok) throw new Error('Error al cargar pedido');
-  return res.json();
+  return secureFetch(`/api/orders/${id}`);
 }
 
 export async function createOrder(data: object) {
-  const res = await fetch('/api/orders', {
+  return secureFetch('/api/orders', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.detail || 'Error al crear pedido');
-  return json;
 }
 
 export async function patchOrder(id: number | string, data: object) {
-  const res = await fetch(`/api/orders/${id}`, {
+  return secureFetch(`/api/orders/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.detail || 'Error al actualizar pedido');
-  return json;
 }
 
 export async function deleteOrder(id: number | string) {
@@ -41,31 +58,23 @@ export async function deleteOrder(id: number | string) {
 
 // ── Order Items ─────────────────────────────────────────────────────────────
 export async function listItems(orderId: number | string) {
-  const res = await fetch(`/api/orders/${orderId}/items`);
-  if (!res.ok) throw new Error('Error al cargar ítems');
-  return res.json();
+  return secureFetch(`/api/orders/${orderId}/items`);
 }
 
 export async function addItem(orderId: number | string, data: object) {
-  const res = await fetch(`/api/orders/${orderId}/items`, {
+  return secureFetch(`/api/orders/${orderId}/items`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.detail || 'Error al agregar ítem');
-  return json;
 }
 
 export async function patchItem(orderId: number | string, itemId: number | string, data: object) {
-  const res = await fetch(`/api/orders/${orderId}/items/${itemId}`, {
+  return secureFetch(`/api/orders/${orderId}/items/${itemId}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.detail || 'Error al actualizar ítem');
-  return json;
 }
 
 export async function deleteItem(orderId: number | string, itemId: number | string) {
@@ -76,107 +85,78 @@ export async function deleteItem(orderId: number | string, itemId: number | stri
 // ── Customers ───────────────────────────────────────────────────────────────
 export async function listCustomers(params: Record<string, string | number> = {}) {
   const qs = new URLSearchParams(params as Record<string, string>).toString();
-  const res = await fetch(`/api/customers${qs ? '?' + qs : ''}`);
-  if (!res.ok) throw new Error('Error al cargar clientes');
-  return res.json();
+  return secureFetch(`/api/customers${qs ? '?' + qs : ''}`);
 }
 
 export async function getCustomer(id: number | string) {
-  const res = await fetch(`/api/customers/${id}`);
-  if (!res.ok) throw new Error('Error al cargar cliente');
-  return res.json();
+  return secureFetch(`/api/customers/${id}`);
 }
 
 export async function createCustomer(data: object) {
-  const res = await fetch('/api/customers', {
+  return secureFetch('/api/customers', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.detail || 'Error al crear cliente');
-  return json;
 }
 
 export async function patchCustomer(id: number | string, data: object) {
-  const res = await fetch(`/api/customers/${id}`, {
+  return secureFetch(`/api/customers/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.detail || 'Error al actualizar cliente');
-  return json;
 }
 
 // ── Products ─────────────────────────────────────────────────────────────────
 export async function listProducts(params: Record<string, string | number> = {}) {
   const qs = new URLSearchParams(params as Record<string, string>).toString();
-  const res = await fetch(`/api/products${qs ? '?' + qs : ''}`);
-  if (!res.ok) throw new Error('Error al cargar productos');
-  return res.json();
+  return secureFetch(`/api/products${qs ? '?' + qs : ''}`);
 }
 
 export async function getProduct(id: number | string) {
-  const res = await fetch(`/api/products/${id}`);
-  if (!res.ok) throw new Error('Error al cargar producto');
-  return res.json();
+  return secureFetch(`/api/products/${id}`);
 }
 
 export async function createProduct(data: object) {
-  const res = await fetch('/api/products', {
+  return secureFetch('/api/products', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.detail || 'Error al crear producto');
-  return json;
 }
 
 export async function patchProduct(id: number | string, data: object) {
-  const res = await fetch(`/api/products/${id}`, {
+  return secureFetch(`/api/products/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.detail || 'Error al actualizar producto');
-  return json;
 }
 
 // ── Suppliers ────────────────────────────────────────────────────────────────
 export async function listSuppliers(params: Record<string, string | number> = {}) {
   const qs = new URLSearchParams(params as Record<string, string>).toString();
-  const res = await fetch(`/api/suppliers${qs ? '?' + qs : ''}`);
-  if (!res.ok) throw new Error('Error al cargar proveedores');
-  return res.json();
+  return secureFetch(`/api/suppliers${qs ? '?' + qs : ''}`);
 }
 
 export async function getSupplier(id: number | string) {
-  const res = await fetch(`/api/suppliers/${id}`);
-  if (!res.ok) throw new Error('Error al cargar proveedor');
-  return res.json();
+  return secureFetch(`/api/suppliers/${id}`);
 }
 
 export async function createSupplier(data: object) {
-  const res = await fetch('/api/suppliers', {
+  return secureFetch('/api/suppliers', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.detail || 'Error al crear proveedor');
-  return json;
 }
 
 export async function patchSupplier(id: number | string, data: object) {
-  const res = await fetch(`/api/suppliers/${id}`, {
+  return secureFetch(`/api/suppliers/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.detail || 'Error al actualizar proveedor');
-  return json;
 }
+

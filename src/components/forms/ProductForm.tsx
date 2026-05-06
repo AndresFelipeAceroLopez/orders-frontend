@@ -21,7 +21,7 @@ export default function ProductForm({ id }: { id?: string }) {
   const [loading, setLoading] = useState(isEdit);
 
   useEffect(() => {
-    listSuppliers({ limit: 1000 }).then((d: any) => setSuppliers(d.items ?? d));
+    listSuppliers({ limit: 100 }).then((d: any) => setSuppliers(d.items ?? d));
     if (isEdit && id) {
       getProduct(id).then(setForm).finally(() => setLoading(false));
     }
@@ -30,11 +30,10 @@ export default function ProductForm({ id }: { id?: string }) {
   const handleSave = async () => {
     if (!form.productName) { notify('El nombre del producto es requerido', 'warning', 2000); return; }
     try {
-      const data = { ...form };
-      if (typeof data.supplier === 'object' && data.supplier !== null) {
-          // @ts-ignore
-          data.supplierId = data.supplier.id;
-          delete data.supplier;
+      const data: any = { ...form };
+      if (data.supplier) {
+        data.supplierId = typeof data.supplier === 'object' ? data.supplier.id : data.supplier;
+        delete data.supplier;
       }
       
       const saved = isEdit && id ? await patchProduct(id, data) : await createProduct(data);
