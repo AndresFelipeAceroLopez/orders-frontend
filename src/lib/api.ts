@@ -1,5 +1,12 @@
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
+
 // Helper for robust fetch
-async function secureFetch(url: string, init?: RequestInit) {
+async function secureFetch(path: string, init?: RequestInit) {
+  // Remove trailing slash from BASE_URL and leading slash from path
+  const normalizedBase = BASE_URL.replace(/\/$/, '');
+  const normalizedPath = path.startsWith('/api/') ? path.replace('/api', '') : path;
+  const url = normalizedPath.startsWith('http') ? normalizedPath : `${normalizedBase}${normalizedPath}`;
+
   const res = await fetch(url, init);
   if (!res.ok) {
     let detail = '';
