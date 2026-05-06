@@ -1,4 +1,5 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
+const envUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
+const BASE_URL = envUrl ? `${envUrl.replace(/\/$/, '')}/api/v1` : '/api';
 
 // Helper for robust fetch
 async function secureFetch(path: string, init?: RequestInit) {
@@ -59,8 +60,7 @@ export async function patchOrder(id: number | string, data: object) {
 }
 
 export async function deleteOrder(id: number | string) {
-  const res = await fetch(`/api/orders/${id}`, { method: 'DELETE' });
-  if (!res.ok && res.status !== 204) throw new Error('Error al eliminar pedido');
+  await secureFetch(`/api/orders/${id}`, { method: 'DELETE' });
 }
 
 // ── Order Items ─────────────────────────────────────────────────────────────
@@ -85,8 +85,7 @@ export async function patchItem(orderId: number | string, itemId: number | strin
 }
 
 export async function deleteItem(orderId: number | string, itemId: number | string) {
-  const res = await fetch(`/api/orders/${orderId}/items/${itemId}`, { method: 'DELETE' });
-  if (!res.ok && res.status !== 204) throw new Error('Error al eliminar ítem');
+  await secureFetch(`/api/orders/${orderId}/items/${itemId}`, { method: 'DELETE' });
 }
 
 // ── Customers ───────────────────────────────────────────────────────────────
